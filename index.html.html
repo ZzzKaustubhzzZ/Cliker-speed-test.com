@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Ultimate Reaction Tester</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        #game-box {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            user-select: none;
+        }
+        #game-box.waiting {
+            background: #ff4757; /* Red */
+            transform: scale(0.95);
+        }
+        #game-box.ready {
+            background: #2ed573; /* Green */
+            transform: scale(1.05);
+        }
+        #game-box.result {
+            background: linear-gradient(45deg, #ff9a00, #ff5e62); /* Gold/Orange */
+            transform: scale(1.03);
+        }
+        #score {
+            font-size: 1.5rem;
+            margin: 20px 0;
+        }
+        #reaction-message {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 40px;
+            color: #ffdd59;
+        }
+        button {
+            background: linear-gradient(90deg, #e52e71, #ff8a00);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        /* Menu */
+        .menu-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            text-align: left;
+        }
+        .menu.show {
+            display: block;
+        }
+        .menu-item {
+            padding: 8px 0;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .menu-item:hover {
+            color: #ff8a00;
+        }
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .mode-info {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="menu-btn" onclick="toggleMenu()">☰ Menu</button>
+        <div class="menu" id="menu">
+            <div class="menu-item" onclick="setMode('click')">Mouse Click Mode</div>
+            <div class="menu-item" onclick="setMode('key')">Key Press Mode</div>
+            <div class="menu-item" onclick="alert('Coming Soon: Color Flash Mode!')">Color Flash Mode (Soon)</div>
+            <div class="menu-item" onclick="alert('Coming Soon: Aim Trainer!')">Aim Trainer (Soon)</div>
+            <div class="sound-toggle">
+                <span>Sound:</span>
+                <button onclick="toggleSound()" id="sound-btn">🔊 ON</button>
+            </div>
+        </div>
+
+        <h1>ULTIMATE REACTION TESTER</h1>
+        <p id="mode-info">Click the box when it turns green!</p>
+        
+        <div id="game-box" class="waiting">WAITING...</div>
+        
+        <div id="score">Your time: <span id="time">-</span> ms</div>
+        <div id="reaction-message"></div>
+        <button id="start-btn">Start Test</button>
+    </div>
+
+    <!-- Sound Effects -->
+    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3"></audio>
+    <audio id="success-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
+    <audio id="f1-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-car-racing-loop-1256.mp3"></audio>
+    <audio id="game-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3"></audio>
+
+    <script>
+        const gameBox = document.getElementById("game-box");
+        const startBtn = document.getElementById("start-btn");
+        const timeDisplay = document.getElementById("time");
+        const reactionMessage = document.getElementById("reaction-message");
+        const modeInfo = document.getElementById("mode-info");
+        const menu = document.getElementById("menu");
+        
+        // Sound elements
+        const clickSound = document.getElementById("click-sound");
+        const successSound = document.getElementById("success-sound");
+        const f1Sound = document.getElementById("f1-sound");
+        const gameSound = document.getElementById("game-sound");
+        
+        let startTime;
+        let timeoutId;
+        let gameStarted = false;
+        let currentMode = "click"; // 'click' or 'key'
+        let soundEnabled = true;
+
+        // Toggle menu
+        function toggleMenu() {
+            menu.classList.toggle("show");
+        }
+
+        // Toggle sound
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById("sound-btn").textContent = soundEnabled ? "🔊 ON" : "🔇 OFF";
+        }
+
+        // Set game mode
+        function setMode(mode) {
+            currentMode = mode;
+            if (mode === "click") {
+                modeInfo.textContent = "Click the box when it turns green!";
+                gameBox.style.cursor = "pointer";
+            } else if (mode === "key") {
+                modeInfo.textContent = "Press SPACE when the box turns green!";
+                gameBox.style.cursor = "default";
+            }
+            toggleMenu();
+            resetGame();
+        }
+
+        // Start the game
+        startBtn.addEventListener("click", startGame);
+        gameBox.addEventListener("click", handleClick);
+        document.addEventListener("keydown", handleKeyPress);
+
+        function startGame() {
+            if (gameStarted) return;
+            
+            gameStarted = true;
+            startBtn.disabled = true;
+            gameBox.textContent = "WAITING...";
+            gameBox.className = "waiting";
+            reactionMessage.textContent = "";
+            
+            // Random delay (1-4 seconds)
+            const delay = 1000 + Math.random() * 3000;
+            
+            timeoutId = setTimeout(() => {
+                gameBox.textContent = currentMode === "click" ? "CLICK NOW!" : "PRESS SPACE!";
+                gameBox.className = "ready";
+                startTime = new Date().getTime();
+                if (soundEnabled) clickSound.play();
+            }, delay);
+        }
+
+        // Handle mouse click
+        function handleClick() {
+            if (!gameStarted || gameBox.className !== "ready" || currentMode !== "click") return;
+            react();
+        }
+
+        // Handle key press
+        function handleKeyPress(e) {
+            if (!gameStarted || gameBox.className !== "ready" || currentMode !== "key") return;
+            if (e.code === "Space") react();
+        }
+
+        // Reaction logic
+        function react() {
+            const endTime = new Date().getTime();
+            const reactionTime = endTime - startTime;
+            
+            timeDisplay.textContent = reactionTime;
+            gameBox.textContent = reactionTime + " ms";
+            gameBox.className = "result";
+            
+            // Play themed sound
+            if (soundEnabled) {
+                if (reactionTime < 200) f1Sound.play();
+                else gameSound.play();
+            }
+
+            // Tiered Reaction Messages
+            let message;
+            if (reactionTime < 120) {
+                message = "🚀 F1 PILOT REFLEXES! (Are you human?)";
+            } else if (reactionTime < 180) {
+                message = "✈️ Fighter Jet Pilot Speed!";
+            } else if (reactionTime < 220) {
+                message = "🎮 Elite Gamer Mode!";
+            } else if (reactionTime < 280) {
+                message = "🏎️ Race Car Driver Level!";
+            } else if (reactionTime < 350) {
+                message = "🏒 NHL Hockey Player Reflexes!";
+            } else if (reactionTime < 450) {
+                message = "🎾 Pro Tennis Player!";
+            } else if (reactionTime < 600) {
+                message = "🐆 Cheetah Speed! (Almost...)";
+            } else if (reactionTime < 800) {
+                message = "🦘 Kangaroo Energy!";
+            } else if (reactionTime < 1000) {
+                message = "🐢 Turtle Pace... But you'll get faster!";
+            } else if (reactionTime < 1500) {
+                message = "🦥 Sloth Mode. Try again!";
+            } else {
+                message = "😴 Did you fall asleep? You got this!";
+            }
+            
+            reactionMessage.textContent = message;
+            
+            gameStarted = false;
+            startBtn.disabled = false;
+            clearTimeout(timeoutId);
+        }
+
+        // Reset game state
+        function resetGame() {
+            gameStarted = false;
+            startBtn.disabled = false;
+            gameBox.textContent = "WAITING...";
+            gameBox.className = "waiting";
+            clearTimeout(timeoutId);
+        }
+    </script>
+</body>
+</html>
